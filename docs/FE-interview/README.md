@@ -148,6 +148,14 @@ sidebar: auto
 
 ### MVVM原理
 
+### 响应式数据的原理
+
+初始化数据->
+
+### Vue中是如何检测数组变化
+
+
+
 ### 怎么实现vue的minin方法
 
 ### Vuex的原理
@@ -182,7 +190,10 @@ sidebar: auto
 
 ### 浏览器渲染过程
 
-### load、DOMContentLoaded事件的触发顺序
+### onload、DOMContentLoaded事件的触发顺序
+
+1. 当onload事件触发时，页面上所有的DOM，样式表，脚本，图片等都已经加载好了。
+2. 当DOMContentLoaded事件触发时，只有DOM加载完成。
 
 ### WEBSOCKET握手过程
 
