@@ -4,7 +4,7 @@ heroImage: null
 heroText: Null的博客
 tagline: 人之患在于好为人师
 actionText: 进入主页 →
-actionLink: /FE-interview
+actionLink: /FE-interview/
 features:
   - title: 面试题
     details: 常见的前端面试题和答案
