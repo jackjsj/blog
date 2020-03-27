@@ -343,13 +343,21 @@ JS引擎由两个主要部分组成：
 - 代码执行过程中，将任务的各自回调函数根据任务类型放入对应的任务队列中
 - 主执行栈清空，依次执行微任务队列中的任务，微任务队列清空后，再执行宏任务队列中的下一个任务
 
-### JS异步方式
+### JS异步编程方式
 
 - 回调函数
-- promise
-- generator
+- Promise
+  - Promise是ES6新增的语法，是异步编程的一种解决方案，解决了传统回调函数方式的地狱回调的问题。
+  - Promise是一个构造函数，接受一个方法，方法有两个参数，分别是resolve和reject，通过构造函数可以创建Promise实例
+  - 一个Promise实例对象有三种状态，初始为pending状态，可以通过resolve和reject函数将状态转变为resolved和rejected状态，状态一旦改变就不能再次改变。
+  - promise实例对象还有一个then方法，方法接受一个回调方法，当状态从pending变为resolved或rejected后，就会执行then中的这个回调方法，他的返回值是一个新的promise实例
+- Generator
+  - Generator是ES6中新增的语法，也是异步编程的解决方案。
+  - 声明函数时在函数名前加*号，就可以声明一个Generator函数，函数内使用yield表达式，定义不同的内部状态，执行该函数会返回一个遍历器对象。
+  - 这个遍历器对象代表Generator函数的内部指针，每次调用遍历器对象的next方法，会返回一个有value和done两个属性的对象。
+  - value属性表示当前内部状态的值，是yield表达式后面那个表达式的值；done属性是一个boolean，表示是否遍历结束
 - async/await
-  - 是Generator函数的语法糖，建立在Promise上
+  - 是Generator函数的语法糖，Generator函数的执行需要执行器，async函数自带执行器
   - async 声明一个异步函数，其返回值是一个Promise对象，只有在async函数内部异步操作执行完，才会执行then方法指定的回调，内部可使用await
   - await只能在async声明的函数中使用，放在Promise对象前，后面的代码会等到Promise完成并返回结果后才执行。
   - 优势
