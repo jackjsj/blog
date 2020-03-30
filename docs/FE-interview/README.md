@@ -1009,13 +1009,25 @@ Websocket是一个全新、独立的协议，基于TCP协议，与http协议兼�
 - Plugin
   - webpack在运行的生命周期会发布很多事件，Plugin通过监听这些事件，调用webpack的api改变输出结果。
 
-### webpack的热更新是怎么实现的
-
-
-
 ### 如何用webpack来优化前端性能
 
-### 如何提高webpack的打包速度和构建速度
+- 代码压缩：删除多余代码、注释、简化代码写法。如UglifyJsPlugin压缩JS文件，利用css-loader的minimize来压缩css
+- 利用CDN加速
+- Tree-shaking：剔除永远不会走到的代码片断
+- Code Spliting:将代码按路由维度或组件分块，按需加载，同时可以充分利用浏览器缓存
+- 提取公共第三方库：SplitChunksPlugin插件可以对公共模块抽取，利用浏览器缓存可以长期缓存这些无需频繁变动的公共代码。
+
+### 如何提高webpack的打包速度
+
+- 提取公共文件：多入口情况下，使用CommonChunkPlugin
+- 外部扩展：通过externals配置来提取常用库，将不怎么需要更新的第三方库脱离webpack打包，不被打入bundle中，从而减少打包时间，如jQuery用script标签引入
+- dll：利用DllPlugin和DllReferencePlugin预编译资源模块，让一些基本不会改动的代码先打包成静态资源，避免反复编译
+- 利用缓存：webpack.cache、babel-loader.cacheDirectory、HappyPack.cache都可以利用缓存提高rebuild效率
+- 缩小文件搜索范围：比如babel-loader插件，如果你的文件仅存在于src中，那么可以设置include:path.resolve(__dirname,'src')
+
+- happypack多线程编译：利用进程并行编译loader，利用缓存来使得rebuild更快，类似的替代者是thread-loader
+- 提升代码压缩速度：webpack-uglify-parallel,多核并行压缩
+- 使用Tree-shaking和Scope Hoisting剔除多余代码。
 
 ### 怎么配置单页应用和多页应用
 
@@ -1026,13 +1038,56 @@ Websocket是一个全新、独立的协议，基于TCP协议，与http协议兼�
 
 ### babel的原理
 
-### 如何写一个Babel插件
+1. 解析：将代码解析生成抽象语法树（AST），即词法分析和语法分析的过程
+2. 转换：babel接受AST并通过babel-traverse对其进行遍历，在此过程中进行添加、更新及移除等操作
+3. 生成：使用babel-generator模块将变换后的AST再转换为JS代码，
 
 ### git工作流是怎样的
 
+GitFlow是一个git操作流程标准，包含如下如个关键分支：
+
+| 名称    | 说明                                                         |
+| ------- | ------------------------------------------------------------ |
+| master  | 主分支                                                       |
+| develop | 主开发分支，包含确定即将发布的代码                           |
+| feature | 新功能分支，一般一个新功能对应一个分支，对于功能的拆分需要比较合理，以避免一些后面不必要的代码冲突 |
+| release | 发布分支，发布时候用的分支，一般测试时候发现的 bug 在这个分支进行修复 |
+| hotfix  | hotfix 分支，紧急修 bug 的时候用                             |
+
+feature分支都是从develop分支创建的，完成后再合并到develop分支，等待发布
+
+当需要发布时，我们从develop分支创建一个release分支
+
+然后这个release分支会发布到测试环境进行测试，如果发现问题就在这个分支直接进行修复
+
+在所有问题修复之前，我们会不停地重复发布->测试->修复->重新发布->重新测试这个流程
+
+发布结束后，这个release分支会合并到develop和master分支，从而保证不会有代码丢失
+
+master分支只跟踪已经发布的代码，合并到master上的commit只能来自release分支和hotfix分支
+
+hotfix分支的作用是紧急修复一些Bug，它们都是从master分支上的某个tag建立，修复结束后再合并到develop和master分支上
+
 ### rebase与merge的区别
 
+二者都是用于从一个分支获取并且合并到当前分支。
+
+merge会自动创建一个新的commit
+
+rebase会合并之前的commit历史
+
 ### git reset\git revert\git checkout的区别
+
+git仓库包括三个组成部分：
+
+- 工作区（Working Directory)，在git管理下的正常目录都算是工作区，我们平时编辑工作都是在工作区完成
+
+- 暂存区（Stage)，临时区域，里面存放要提交文件的快照，执行git add .将文件放入暂存区
+- 历史记录区（History），历史记录区，git commit 后文件存入历史记录区
+
+- git reset只是把文件从历史记录区拿到暂存区，不影响工作区的内容，而且不支持--mixed --soft和--hard
+- git checkout则是把文件从暂存区拿到工作区，不影响历史记录区的内容
+- git revert不支持文件层面的操作
 
 ### 首屏优化
 
