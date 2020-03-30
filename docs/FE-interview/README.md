@@ -142,7 +142,7 @@ meta标签用来**描述HTML文档元信息**，例如**描述**，**关键字**
   - 浮动元素
   - position为absolute或fixed的元素
   - overflow不为visible的元素
-  - display为inline-block\table-cell\table-caption\flex\inline-flex的元素等
+  - display为inline-block\table\table-cell\table-caption\flex\inline-flex\grid\inline-grid的元素等
 - BFC有一些特性，比如：
   - BFC内部盒子会在垂直方向**一个接一个**地排列
   - BFC内部盒子**垂直方向的距离**由外边距决定，同属一个BFC的相邻盒子垂直外边距会重叠
@@ -341,11 +341,18 @@ JS引擎由两个主要部分组成：
 
 ### 事件循环
 
-- js 中有一个**主线程**，一个**调用栈**，和独立于调用栈的消息队列，可分宏任务队列和微任务队列
-- 宏任务：script 代码，setTimeout/setInterval/setImmediate, I/O, UI rendering
-- 微任务：process.nextTick, Promise, MutationObserver
-- 代码执行过程中，将任务的各自回调函数根据任务类型放入对应的任务队列中
-- 主执行栈清空，依次执行微任务队列中的任务，微任务队列清空后，再执行宏任务队列中的下一个任务
+首先在我们JS中，只有一个主线程，主线程中有一个调用栈，在调用栈中执行我们的同步代码。
+
+当我们的代码中有setTimeout, setInterval 或 ajax 等异步操作的时候，这些异步任务不会在主线程中执行，而是js引擎将他们交给对应的定时器触发线程或HTTP请求线程去执行，然后这些线程执行完毕后，会将回调函数按顺序放到一个任务队列当中。
+
+当JS中的主线程调用栈中的任务全部执行完毕后，js引擎才会去任务队列中找有没有异步任务，如果有就依次将它们放入主线程的调用栈中执行。当任务队列中的任务都执行完成后，事件循环就结束了。
+
+实际上，任务队列分成宏任务队列和微任务队列。
+
+- 宏任务：script 代码，setTimeout/setInterval/setImmediate, I/O
+- 微任务：Promise, MutationObserver，process.nextTick
+
+JS引擎一开始会先执行一个宏任务，也就是script代码，执行过程中可能会产生新的宏任务和微任务，分别将他们放入对应的任务队列中，当宏任务执行完成后，会查看微任务队列中是否有可执行的微任务，如有执行所有的微任务，这样完成了一轮事件循环，下一轮循环则开始执行新的宏任务。
 
 ### JS异步编程方式
 
@@ -555,13 +562,31 @@ JS引擎由两个主要部分组成：
 
 ### 排序算法
 
+- 冒泡排序
+  - 时间复杂度：O(n^2)
+  - 思路：
+    - 相邻两个数从左到右依次对比，左数大于右数，则交换位置；
+    - 这样对比完一轮，最大的数在最右边；
+    - 一直这样对比N轮，N为数组长度-1
+- 快速排序
+  - 时间复杂度：O(nlogn)
+  - 思路：
+    - 在数组中取一个基准值Pivot，可以取数组中间那个数
+    - 数组头和尾各放一个指针，将指针指向的数与基准值对比，头指针小于基准值则向右移动，尾指针大于基准值则向左移动，直到头指针位置超过尾指针就停止移动
+    - 过程中如果有头指针指向的数大于基准值且尾指针指向的数小于基准值，就交换头尾指针指向的两个数的位置
+    - 当指针停止后，记录头指针的位置，以这个位置为准将数组分为两部分，然后分别对这两部分执行1到3步骤，直到数组的元素个数小于等于1
+    - 然后把数组再合并起来
+- 插入排序
+  - 时间复杂度：O(n^2)
+- 归并排序
+
 ## 浏览器、HTTP和前端安全
 
 ### 从浏览器地址栏输入url到显示页面的步骤
 
 1. 浏览器查看缓存，如果请求资源在缓存中并且新鲜，直接进行文件转码解析
-2. 如果资源没有缓存，或者缓存已过期，则解析URL获取协议，主机，端口号和path，组装一个HTTP GET请求报文
-3. 先做 DNS 查询，将域名解析成IP地址，这个过程会先去找DNS缓存
+2. 如果资源没有缓存，或者缓存已过期，则解析URL获取协议，主机，端口号和path，组装成一个HTTP GET请求报文
+3. 对主机域名做DNS解析，将其解析成IP地址，这个过程会先去找DNS缓存
    1. 浏览器DNS缓存
    2. 本机DNS缓存
    3. hosts文件
@@ -577,7 +602,7 @@ JS引擎由两个主要部分组成：
 10. 文件解码成功后，正式开始渲染流程，解析HTML构建 DOM 树，与此同时解析CSS构建 CSSOM 树。
 11. 如果遇到 `script` 标签的话，默认会阻塞渲染流程，直到JS解析执行完毕，如果存在 `async` 或者 `defer`属性 ，前者会并行下载，下载完后立即执行脚本，后者也会并行下载文件，但不会立即执行，会等到HTML解析完成后顺序执行。
 12. DOM树和CSSOM树构建完成后会合成 Render 树。
-13. 接着进入布局阶段（**Layout**)阶段，为每个节点分配一个应出现在屏幕上的确切坐标。
+13. 接着进入布局阶段（**Layout**），为每个节点分配一个应出现在屏幕上的确切坐标。
 14. 随后调用**GPU进行绘制**，遍历Render Tree的节点，并将元素呈现出来。
 
 ### 浏览器渲染过程
@@ -667,10 +692,103 @@ HTTP是超文本传输协议（Hyper Text Transfer Protocol）是一种通信协
 ### HTTP首部
 
 - 通用首部
+
+  - 通用信息性首部字段
+
+    - Connection
+
+      -  控制不再转发给代理的首部字段（即逐跳首部），应用程序会删除报文中所有在Connection首部中出现过的首部，如下示例
+
+        ```
+        # 客户端请求首部
+        GET / HTTP1.1
+        Upgrade:WebSocket
+        Connection:Upgrade
+        
+        # 经过代理服务器后发送给Web服务器的首部
+        GET / HTTP1.1
+        ```
+
+      - 管理持久连接
+
+        - Connection:close , HTTP/1.1 默认都是持久连接，使用close后会明确断开连接
+        - Connection:keep-alive, HTTP/1.1之前的版本默认都是非持久连接，使用keep-alive可以开启持久连接。
+
+    - Warning: 错误和警告通知
+
+    - Upgrade: 升级为其它协议
+
+    - Date: 创建报文的日期
+
+    - Transfer-Encoding: 报文主体的传输编码格式
+
+    - Trailer: 服文末端的首部一览
+
+    - via：代理服务器的相关信息
+
+  - 通用缓存首部字段
+
+    - Cache-Control: 控制缓存
+    - Pragma: HTTP/1.1以前的遗留字段Pragma:no-cache与Cache-Control:no-cache功能一致，只用在客户端发送请求时
+
 - 请求首部
+
+  - Accept
+    - Accept: 客户端或者代理能处理的媒体类型
+    - Accept-Encoding: 优先可处理的编码格式
+    - Accept-Language:优先可处理的自然语言
+    - Accept-Charset:优先可处理的字符集
+    - TE：传输编码的优先级
+  - 条件请求首部字段
+    - If-Match/If-None-Match
+    - if-Modified-Since/if-Unmodified-Since
+    - if-Range: 如果字段的值ETAG或时间与资源的ETAG或时间一致时，结合Range头进行范围请求，否则返回全体资源。
+    - Range：范围请求，只获取部分资源，返回206
+    - Expect：期待服务器的特定行为
+  - 请求信息性首部字段
+    - Host：请求资源所在的服务器
+    - From：用户的邮箱地址
+    - User-Agent：客户端程序信息
+    - Referer:请求原始方的url
+  - 安全请求首部字段
+    - Authorization:web的认证信息
+    - Cookie：HTTP/1.1中没有定义，用于客户端识别和跟踪状态的首部
+  - 代理请求首部字段
+    - Max-Forwards:最大的逐跳次数，只能和TRACE方法一起使用，每经过一层代理，值减1，如果应用程序收到请求时，首部值为0，则立即返回一条200的响应
+    - Proxy-Authorization:代理服务器要求web认证信息
+
 - 响应首部
+
+  - 响应信息性首部字段
+    - Age:响应已经产生了多长时间，HTTP/1.1规定缓存服务器在创建响应时必须包含Age首部
+    - Location：客户端应重定向到指定URI，主要配合3XX响应出现
+    - Retry-After：告诉客户端多久之后再次发送请求，主要配合503使用
+    - Server：HTTP服务器的应用程序信息
+  - 协商首部字段
+    - Accept-Ranges:服务器是否能处理范围请求
+    - Vary:
+      - 通知客户端，服务端的协商中会使用哪些来自客户端请求的首部
+      - 缓存控制，对某次请求，响应报文的Vary中会指定一些首部名称，客户端后续请求相同资源时，这些首部与缓存的那次请求完全一致时才会返回缓存资源
+  - 安全响应首部字段
+    - WWW-Authenticate/Proxy-Authenticate:服务器/代理服务器要求客户端的验证信息
+    - Set-Cookie：非HTTP/1.1标准首部，服务端向客户端设置Cookie
+
 - 实体首部
-- 常见
+
+  - 实体信息性首部字段
+    - Allow：通知客户端可以对指定资源使用哪些HTTP方法
+  - 内容首部字段：
+    - Content-Encoding
+    - Content-Language
+    - Content-Length
+    - Content-Location:报文主体部分相对应的URI
+    - Content-MD5：
+    - Content-Range
+    - Content-Type
+  - 实体缓存首部字段
+    - ETag
+    - Expires
+    - Last-Modified
 
 ### HTTP的keep-alive是干什么的
 
@@ -773,7 +891,7 @@ HTTP是超文本传输协议（Hyper Text Transfer Protocol）是一种通信协
 - 三次握手
   - 第一次握手，客户端向服务端发送一个SYN标志位为1，发送序号SEQ为X的包，客户端进入SYN_SENT状态
   - 第二次握手，服务端接收到客户端的包后，发回一个SYN标志位和ACK标志位均为1，发送序列SEQ为Y，确认序号ACK_NUM为X+1的包，服务端进入SYN_REVD状态
-    - 第三次握手，客户端接收到客户端的包后，再次发送一个ACK标志位为1，确认序号ACK_NUM为Y+1的确认包，双方进入established状态
+  - 第三次握手，客户端接收到客户端的包后，再次发送一个ACK标志位为1，确认序号ACK_NUM为Y+1的确认包，双方进入established状态
 - 四次挥手
   - 第一次挥手：假设客户端想关闭连接，客户端发送一个FIN标志位为1，发送序号为X的包，表示自己没有数据可以发送，但可以接受数据，客户端进入FIN_WAIT_1状态
   - 第二次挥手：服务端接收后，发送一个ACK标志位为1，确认序号ack_num为X+1的确认包，表示自己接受了客户端的关闭连接请求，但还没有准备好关闭连接，服务端进行CLOSE_WAIT状态，客户端接收到确认包后，进行FIN_WAIT_2状态，等待服务器关闭连接
@@ -836,23 +954,75 @@ Websocket是一个全新、独立的协议，基于TCP协议，与http协议兼�
 
 ### webpack的构建流程
 
+1. 初始化参数：从配置文件和命令行中读取与合并参数，得到最终的参数
+2. 开始编译：用参数初始化Compiler对象，加载所有配置的Plugin，执行对象的run方法开始执行编译
+3. 确定入口：根据配置中的entry找出所有的入口文件
+4. 编译模块：从入口文件出发，调用所有配置的Loader对模块进行翻译，再找出该模块的依赖，递归本步骤直到所有入口依赖的文件都经过Loader翻译
+5. 完成模块编译：得到被翻译后的最终内容和它们的依赖关系
+6. 输出资源：根据入口和模块间的依赖关系，组装成一个个包含多个模块的Chunk，再把每个Chunk转换成一个单独的文件加入输出列表，这一步是可以修改输出内容的最后机会
+7. 完成输出：在确定好输出内容后，根据配置确定输出的路径和文件名，把文件内容写到文件系统。
+
 ### webpack和gulp的区别
+
+- Gulp是基于任务的工具，自动执行指定的任务，如同流水线，把资源放上去然后通过不同插件进行加工，然后输出加工后的资源。
+- Webpack是基于模块化的打包工具，自动化处理模块，把一切当成模块，当webpack处理应用程序时，它会递归地构建一个依赖关系图，其中包含应用程序需要的每个模块，然后将所有这些模块打包成一个或多个bundle。
+
+### bundle，chunk和module是什么
+
+- bundle：是webpack打包出来的文件
+- chunk: 是代码块，一个chunk由多个模块组合而成，用于代码的合并和分割
+- module:是开发中的单个模块，在webpack中一切皆模块，一个模块对应一个文件，webpack会从配置的entry入口开始递归找出所有依赖的模块
 
 ### loader和plugin的区别
 
+- 不同的作用：
+  - Loader为加载器，webpack原生只能解析JS文件，如果想将其它文件也打包的话，就会用到loader，它的作用就是让webpack拥有加载解析非JS文件的能力。
+  - Plugin为插件，可以扩展webpack的功能，在webpack运行的生命周期中会发布出很多事件，Plugin可以通过监听这些事，调用webpack的api改变输出的结果。
+- 不同的用法：
+  - Loader在modules.rules中配置，也就是说，它作模块的解析规则而存在。类型为数组，每一项都是一个对象，里面描述了对于什么类型的文件，用什么加载器和参数进行解析加载。
+  - Plugin在plugins中单独配置。类型为数组，每一项是一个plugin实例，参数通过构造函数传入。
+
 ### 常用的loader
+
+- file-loader：把文件输出到一个文件夹中，在代码中通过相对URL去引用输出的文件
+- url-loader：和file-loader类似，能在文件很小的情况下以base64的方式把文件内容注入到代码中
+- vue-loader: 能够让webpack解析Vue的单文件组件
+- source-map-loader：加载额外的Source Map文件，以方便断点调试
+- image-loader：加载并压缩图片文件
+- babel-loader:把ES6转换成ES5
+- css-loader:加载CSS，支持模块化、压缩、文件导入特性
+- style-loader:把CSS代码注入到js中，通过DOM操作去加载CSS
 
 ### 常用的plugin
 
+- define-plugin:定义环境变量
+- html-webpack-plugin:简化HTML文件创建
+- uglifyjs-webpack-plugin:通过uglifyjs压缩代码
+- mini-css-extract-plugin:将CSS提取到单独的文件中，支持按需加载
+
 ### 如何编写loader和plugin
 
+- Loader
+  - Loader就像一个翻译官，把读到的源文件内容转义成新的文件内容，并且每个Loader通过链式操作，将源文件一步步翻译成想要的样子。
+  - 编写Loader要遵循单一原则，每个Loader只做一种“翻译”工作。
+  - 输入给Loader的是源文件内容source，通过返回值的方式将处理后的内容输出，也可以调用this.callback()方法，将内容返回给webpack。还可以通过this.aysnc()生成一个callback函数，再用这个callback将处理后的内容输出。此外webpack为开发者提供了开发loader的工具函数集——loader-utils。
+- Plugin
+  - webpack在运行的生命周期会发布很多事件，Plugin通过监听这些事件，调用webpack的api改变输出结果。
+
 ### webpack的热更新是怎么实现的
+
+
 
 ### 如何用webpack来优化前端性能
 
 ### 如何提高webpack的打包速度和构建速度
 
 ### 怎么配置单页应用和多页应用
+
+- 单页应用：直接在entry中指定单页应用的入口即可
+- 多页应用：可以使用webpack的AutoWebPlugin插件来完成简单自动化的构建，但是前提是项目的目录结构必须遵守它预设的规范
+  - 每个页面都有公共的代码，可以将这些代码抽离出来，避免重复加载
+  - 随着业务不断扩展，页面可能会不断追加，所以一定要让入口的配置足够灵活，避免每次添加新页面还需要修改构建配置
 
 ### babel的原理
 
