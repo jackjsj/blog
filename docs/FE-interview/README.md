@@ -1100,7 +1100,7 @@ WebSockets**包括**：
   - **响应**，状态码为101，表示发生了**协议变换**，**响应头**中包含
     - Upgrade和Connection，表示**同意升级**并**使用ws协议**
     - Sec-WebSocket-Accept，服务端将**请求头中的key**进行**加密**后得到的值，表示**服务器同意建立连接**
-    - Sec-WebSocket-Procotol，服务器选择的一个**子协议**
+    - Sec-WebSocket-Protocol，服务器选择的一个**子协议**
 - **数据传输阶段**
   - new Websocket(url) 握手
   - ws.onopen 指定握手连接成功的回调
